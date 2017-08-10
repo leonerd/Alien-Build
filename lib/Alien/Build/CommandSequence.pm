@@ -2,8 +2,8 @@ package Alien::Build::CommandSequence;
 
 use strict;
 use warnings;
-use Text::ParseWords qw( shellwords );
-use Capture::Tiny qw( capture );
+use Importer 'Text::ParseWords' => ( shellwords => { -prefix => '_' } );
+use Importer 'Capture::Tiny' => ( capture => { -prefix => '_' } );
 
 # ABSTRACT: Alien::Build command sequence
 # VERSION
@@ -93,7 +93,7 @@ sub _run_string
   {
     my $cmd = $cmd;
     $cmd =~ s{\\}{\\\\}g if $^O eq 'MSWin32';
-    my @cmd = shellwords($cmd);
+    my @cmd = _shellwords($cmd);
     return $built_in{$cmd[0]}->(@cmd) if $built_in{$cmd[0]};
   }
   
@@ -111,7 +111,7 @@ sub _run_with_code
   if($built_in{$cmd[0]})
   {
     my $error;
-    ($args{out}, $args{err}, $error) = capture {
+    ($args{out}, $args{err}, $error) = _capture {
       eval { $built_in{$cmd[0]}->(@cmd) };
       $@;
     };
@@ -120,7 +120,7 @@ sub _run_with_code
   }
   else
   {
-    ($args{out}, $args{err}, $args{exit}) = capture {
+    ($args{out}, $args{err}, $args{exit}) = _capture {
       system @cmd; $?
     };
   }
