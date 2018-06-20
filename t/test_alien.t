@@ -25,8 +25,7 @@ subtest 'alien_ok' => sub {
     is(
       intercept { alien_ok 'Alien::Foo' },
       array {
-        event Ok => sub {
-          call pass => T();
+        event Pass => sub {
           call name => 'Alien::Foo responds to: cflags libs dynamic_libs bin_dir';
         };
         end;
@@ -47,8 +46,7 @@ subtest 'alien_ok' => sub {
     is(
       intercept { alien_ok $alien },
       array {
-        event Ok => sub {
-          call pass => T();
+        event Pass => sub {
           call name => 'Alien::Foo[instance] responds to: cflags libs dynamic_libs bin_dir';
         };
         end;
@@ -63,8 +61,7 @@ subtest 'alien_ok' => sub {
   is(
     intercept { alien_ok(Alien::Foo->new) },
     array {
-      event Ok => sub {
-        call pass => T();
+      event Pass => sub {
         call name => 'Alien::Foo[instance] responds to: cflags libs dynamic_libs bin_dir';
       };
       end;
@@ -75,14 +72,17 @@ subtest 'alien_ok' => sub {
   is(
     intercept { alien_ok 'Alien::Bogus' },
     array {
-      event Ok => sub {
-        call pass => F();
+      event Fail => sub {
         call name => 'Alien::Bogus responds to: cflags libs dynamic_libs bin_dir';
+        call info => [
+          map {
+            object {
+              call debug => T();
+              call details => "  missing method $_";
+            },
+          } qw( cflags libs dynamic_libs bin_dir )
+        ];
       };
-      event Diag => sub {};
-      event Diag => sub {
-        call message => "  missing method $_";
-      } for qw( cflags libs dynamic_libs bin_dir );
       end;
     },
     "alien_ok with bad class",
@@ -91,13 +91,14 @@ subtest 'alien_ok' => sub {
   is(
     intercept { alien_ok undef },
     array {
-      event Ok => sub {
-        call pass => F();
+      event Fail => sub {
         call name => 'undef responds to: cflags libs dynamic_libs bin_dir';
-      };
-      event Diag => sub {};
-      event Diag => sub {
-        call message => '  undefined alien';
+        call info => [
+          object {
+            call debug   => T();
+            call details => '  undefined alien';
+          },
+        ];
       };
       end;
     },

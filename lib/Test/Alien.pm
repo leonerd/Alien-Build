@@ -9,7 +9,7 @@ use Capture::Tiny qw( capture capture_merged );
 use File::Temp qw( tempdir );
 use File::Copy qw( move );
 use Text::ParseWords qw( shellwords );
-use Test2::API qw( context run_subtest );
+use Test2::API 1.302087 qw( context run_subtest );
 use base qw( Exporter );
 use Path::Tiny qw( path );
 use Alien::Build::Util qw( _dump );
@@ -184,11 +184,15 @@ sub alien_ok ($;$)
     push @diag, "  undefined alien";
   }
 
-  my $ctx = context();
-  $ctx->ok($ok, $message);
-  $ctx->diag($_) for @diag;
-  $ctx->release;
-  
+  if($ok)
+  {
+    context()->pass_and_release($message);
+  }
+  else
+  {
+    context()->fail_and_release($message, @diag);
+  }
+
   $ok;
 }
 
