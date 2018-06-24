@@ -314,6 +314,10 @@ sub mm_postamble
   $postamble .= "alien_prop_runtime :\n" .
                 "\t\$(FULLPERL) -MAlien::Build::MM=cmd -e dumpprop runtime\n\n";
 
+  # help
+  $postamble .= "alien_help :\n" .
+                "\t\$(NOECHO) \$(FULLPERL) -MAlien::Build::MM=cmd -e help\n\n";
+
   $postamble;
 }
 
@@ -325,6 +329,8 @@ sub import
     if($arg eq 'cmd')
     {
       package main;
+
+      my @help;
 
       *_args = sub
       {
@@ -340,6 +346,8 @@ sub import
         $path->parent->mkpath;
         $path->touch;
       };
+
+      push @help, [ 'prefix', 'Set the prefix paths for the alien' ];
 
       *prefix = sub
       {
@@ -362,6 +370,8 @@ sub import
         _touch('prefix');
       };
 
+      push @help, [ 'version', 'Set the module version in the runtime property', 'hash' ];
+
       *version = sub
       {
         my($build, $version) = _args();
@@ -371,6 +381,8 @@ sub import
         _touch('version');
       };
 
+      push @help, [ 'download', 'Download the external package' ];
+
       *download = sub
       {
         my($build) = _args();
@@ -379,11 +391,15 @@ sub import
        _touch('download');
       };
 
+      push @help, [ 'fake_download', 'Print the commands that would be executed to', 'download the external package' ];
+
       *fake_download = sub
       {
         my($build) = _args();
         $build->fake_download;
       };
+
+      push @help, [ 'build', 'Build the exernal package' ];
 
       *build = sub
       {
@@ -428,11 +444,15 @@ sub import
         _touch('build');
       };
 
+      push @help, [ 'fake_build', 'Print the commands that would be executed to', 'build the external package' ];
+
       *fake_build = sub
       {
         my($build) = _args();
         $build->fake_build;
       };
+
+      push @help, [ 'test', 'Run tests for the external package' ];
 
       *test = sub
       {
@@ -440,6 +460,11 @@ sub import
         $build->test;
         $build->checkpoint;
       };
+
+      push @help, [ 'prop', 'Print the meta, install and runtime properties', 'set so far' ];
+      push @help, [ 'prop_meta', 'Print the meta properties' ];
+      push @help, [ 'prop_install', 'Print the install properties set so far' ];
+      push @help, [ 'prop_runtime', 'Print the runtime properties set so far' ];
 
       *dumpprop = sub
       {
@@ -453,7 +478,27 @@ sub import
 
         require Alien::Build::Util;
         print Alien::Build::Util::_dump($type ? $h{$type} : \%h);
-      }
+      };
+
+      push @help, [ 'help', 'Print this help message' ];
+
+      *help = sub
+      {
+        print "Alien specific make commands for this Alien distribution:\n\n";
+
+        foreach my $help (@help)
+        {
+          my($command, $description, @description) = @$help;
+          $command = "alien_$command";
+          printf "  - make %-20s %s\n", $command, $description;
+          printf "         %-20s %s\n", '', $_ for @description;
+        }
+
+        print "\n";
+        print "Note: You do not normally need to execute these commands yourself.\n";
+        print "They should be executed during the normal build and install process.\n";
+        print "They are provided here for debugging the build and install.\n";
+      };
     }
   }
 }

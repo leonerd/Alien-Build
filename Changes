@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+  - Add 'make alien_help' command to Alien::Build::MM
 
 1.46      2018-06-25 03:08:25 +0000
   - Production release identical to 1.45_01
