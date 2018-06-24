@@ -149,7 +149,7 @@ sub _apply
 
 sub execute
 {
-  my($self, $build) = @_;
+  my($self, $build, $fake) = @_;
   my $intr = $build->meta->interpolator;
 
   my $prop = $build->_command_prop;
@@ -158,7 +158,14 @@ sub execute
   {
     if(ref($command) eq 'CODE')
     {
-      $command->($build);
+      if($fake)
+      {
+        $build->log("+ [perl code]");
+      }
+      else
+      {
+        $command->($build);
+      }
     }
     elsif(ref($command) eq 'ARRAY')
     {
@@ -187,20 +194,34 @@ sub execute
       }
       
       ($command, @args) = map { $intr->interpolate($_, $prop) } ($command, @args);
-      
-      if($code)
+
+      if($fake)
       {
-        _run_with_code $build, $command, @args, $code;
+        $build->log("+ $command @args");
       }
       else
       {
-        _run_list $build, $command, @args;
+        if($code)
+        {
+          _run_with_code $build, $command, @args, $code;
+        }
+        else
+        {
+          _run_list $build, $command, @args;
+        }
       }
     }
     else
     {
       my $command = $intr->interpolate($command,$prop);
-      _run_string $build, $command;
+      if($fake)
+      {
+        $build->log("+ $command");
+      }
+      else
+      {
+        _run_string $build, $command;
+      }
     }
   }
 }

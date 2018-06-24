@@ -1754,8 +1754,9 @@ sub call_hook
     else
     {
       $value = $wrapper->(sub {
+        my($build) = @_;
         eval {
-          $hook->execute(@_);
+          $hook->execute($build);
           $args{verify}->('command') if $args{verify};
         };
         defined $args{ok} ? $args{ok} : 1;
